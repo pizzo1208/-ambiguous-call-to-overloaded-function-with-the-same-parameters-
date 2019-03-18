@@ -1,0 +1,61 @@
+extern double SlowEMAAppliedTo=0;
+extern double SlowEMAMethod=0;
+extern double SlowEMAShift=0;
+extern double FastEMAAppliedTo=0;
+extern double FastEMAMethod=0;
+extern double FastEMAShift=0;
+extern double TakeProfit=50;
+extern double StopLoss=25;
+extern int FastEMA=8;
+extern int SlowEMA=34;
+extern double LotSize = 0.01;
+extern int MagicNumber = 0001;
+double Pips = 0;
+extern double StopTradingBalance = 0;
+double AccountBalance();
+
+
+//+------------------------------------------------------------------+
+//| Expert initialization function                                   |
+//+------------------------------------------------------------------+
+int OnInit()
+  {
+//---
+   double TickSize = MarketInfo(Symbol(), MODE_TICKSIZE);
+   if (TickSize == 0.00001 || TickSize == 0.001)
+   Pips = TickSize*10;
+   else Pips = TickSize;
+//---
+   return(INIT_SUCCEEDED);
+  }
+//+------------------------------------------------------------------+
+//| Expert deinitialization function                                 |
+//+------------------------------------------------------------------+
+void OnDeinit(const int reason)
+  {
+//---
+   
+  }
+//+------------------------------------------------------------------+
+//| Expert tick function                                             |
+//+------------------------------------------------------------------+
+void OnTick()
+  {
+//---
+  double PreviousFast = iMA(NULL, 0, FastEMA,FastEMAShift,FastEMAMethod,FastEMAAppliedTo,2);
+  double CurrentFast = iMA(NULL, 0, FastEMA,FastEMAShift,FastEMAMethod,FastEMAAppliedTo,1);
+  double PreviousSlow = iMA(NULL, 0, SlowEMA,SlowEMAShift,SlowEMAMethod,SlowEMAAppliedTo,2);
+  double CurrentSlow = iMA(NULL, 0, SlowEMA,SlowEMAShift,SlowEMAMethod,SlowEMAAppliedTo,1);
+ //+-----------------------------------------------------------------+
+ //|Below write a close order based on fast ema crossing over the slow ema
+ //+-----------------------------------------------------------------+ 
+  if(PreviousFast<PreviousSlow && CurrentFast>CurrentSlow)
+   if(OrdersTotal()==0)
+      if(AccountBalance() > StopTradingBalance)
+         OrderSend(Symbol(),OP_BUY, LotSize, Ask, 3,Ask-(StopLoss*Pips),Ask+ (TakeProfit*Pips),NULL, MagicNumber, 0,Green);
+  
+  if(PreviousFast>PreviousSlow && CurrentFast<CurrentSlow)
+   if(OrdersTotal()==0)
+      OrderSend(Symbol(),OP_SELL, LotSize, Bid, 3,Bid+(StopLoss*Pips),Bid-(TakeProfit*Pips),NULL, MagicNumber, 0,Red);
+  
+  }
